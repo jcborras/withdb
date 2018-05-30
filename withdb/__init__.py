@@ -2,7 +2,7 @@
 # -*- coding: utf-8; mode: python; -*-
 
 __author__ = 'Juan Carlos Borrás'
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 from withdb.mysql import MySQLconnection
 from withdb.psql import PostgreSQLconnection
