@@ -32,8 +32,8 @@ setup(name=PROJECT_NAME,
       packages=['withdb'],
       install_requires=['mysql-connector-python', 'psycopg2'],
       extras_require={
-#          'MySQL': ['mysql-connector-python'],
-#          'PostgreSQL': ['psycopg2'],
+          # 'MySQL': ['mysql-connector-python'],
+          # 'PostgreSQL': ['psycopg2'],
       },
       scripts=[
           'bin/list_available_adaptors',
