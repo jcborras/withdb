@@ -30,10 +30,10 @@ setup(name=PROJECT_NAME,
       author_email='jcborras@gmail.com',
       license='MIT License',
       packages=['withdb'],
-      install_requires=[],
+      install_requires=['mysql-connector-python', 'psycopg2'],
       extras_require={
-          'MySQL': ['mysql-connector-python'],
-          'PostgreSQL': ['psycopg2'],
+#          'MySQL': ['mysql-connector-python'],
+#          'PostgreSQL': ['psycopg2'],
       },
       scripts=[
           'bin/list_available_adaptors',
