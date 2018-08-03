@@ -1,4 +1,8 @@
 *~
+
+# Actual config you don't want to commit in git
+etc/psql.cfg
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
