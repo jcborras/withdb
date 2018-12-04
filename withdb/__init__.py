@@ -4,19 +4,26 @@
 __author__ = 'Juan Carlos Borrás'
 __version__ = '0.0.3'
 
+from logging import getLogger, getLevelName
+
 from withdb.mysql import MySQLconnection
 from withdb.psql import PostgreSQLconnection
 
+logger = getLogger(__name__)
+logger.setLevel(getLevelName('CRITICAL') + 100)
+
 
 def factory(params):
+    logger.debug(params)
     try:
         return {
             'mysql': MySQLconnection,
             'psql': PostgreSQLconnection,
         }[params['type']](params['params'])
     except KeyError:
-        s = 'Bad connection type "{t:s}'
-        raise RuntimeError(s.format(t=params['type']))
+        msg = 'Bad connection type "{t:s}"'.format(t=params['type'])
+        logger.error(msg)
+        raise RuntimeError(msg)
 
 
 def run_select(cfg, qry, logger=None):
