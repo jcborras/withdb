@@ -2,7 +2,7 @@
 # -*- coding: utf-8; mode: python; -*-
 
 __author__ = 'Juan Carlos Borrás'
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 
 from logging import getLogger, getLevelName
 
