@@ -3,12 +3,18 @@
 
 from csv import DictWriter, QUOTE_NONNUMERIC, register_dialect
 from datetime import datetime
+from logging import getLogger, getLevelName
 from re import sub
 
 from psycopg2 import connect as psyconnect
 from psycopg2 import ProgrammingError as psyProgrammingError
 
 from withdb.base import DbConnection
+
+logger = getLogger(__name__)
+print(__name__, 'logger has parent logger: ', logger.parent)
+
+logger.setLevel(getLevelName('CRITICAL') + 100)
 
 
 class PostgreSQLconnection(DbConnection):
@@ -27,6 +33,7 @@ class PostgreSQLconnection(DbConnection):
     def bulkload(self, tablename, filename):
         tplt = "COPY {t:s} FROM '{f:s}' DELIMITER ',' CSV;"
         qry = tplt.format(f=filename, t=tablename)
+        logger.debug(qry)
         self.__call__(qry)
 
     def bulkload_lod(self, lod, keys, tablename, tmp_prefix='/tmp/'):
