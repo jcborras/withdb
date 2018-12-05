@@ -25,7 +25,11 @@ class DbConnection(object):
 
     def __call__(self, query):
         logger.debug(query)
+        t0 = datetime.now()
         self.cur.execute(query)
+        t = datetime.now() - t0
+        _ = 'Query execution time {t:.2f} s.'.format(t=t.total_seconds())
+        logger.info(_.format(t=t.total_seconds()))
         colnames, tuples = None, None
         if self.cur.description:
             colnames = [i[0] for i in self.cur.description]

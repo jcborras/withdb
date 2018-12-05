@@ -6,7 +6,7 @@ from io import StringIO
 from json import load
 from logging import Formatter, StreamHandler, getLogger, getLevelName
 from os.path import expanduser
-from unittest import TestCase, main, skip
+from unittest import TestCase, expectedFailure, main, skip
 
 from pytz import timezone
 
@@ -169,6 +169,35 @@ class TestDrive(TestCase):
                 self.assertEqual(i['ts_without_tz'], _.replace(tzinfo=None))
         with factory(self.cfg) as conn:
             conn("DROP TABLE IF EXISTS on_timezones")
+
+    @expectedFailure
+    def test_70_logs_when_calling_nrow(self):
+        """Check that the nrows() method logs messages"""
+        logger = getLogger('withdb')
+        logger.setLevel(getLevelName('DEBUG'))
+        # print('Propagate: ', logger.propagate)
+        # print('Parent logger effective level: ',
+        #       logger.parent.getEffectiveLevel())
+        # print('dir(): ', dir(logger))
+        iostr = StringIO()
+        sh = StreamHandler(iostr)
+        sh.setLevel(getLevelName('DEBUG'))
+        sh.setFormatter(Formatter(FMT))
+        logger.addHandler(sh)
+
+        with factory(self.cfg) as conn:
+            n = conn.nrows("information_schema.attributes")
+        self.assertEqual(n, 0)
+
+        _ = iostr.getvalue()
+        # print()
+        # print(_)
+        # self.assertEqual(len(_.splitlines()), 1)
+        self.assertIn('withdb.base', _, 'Missing "withdb.base" logger')
+        # _ = [i for i in _.splitlines() if 'INFO' in i and 'run_select' in i]
+        # __ = 'withdb __init__.py:\\d+ INFO:\\d+ run_select:\\s'
+        # __ += 'SELECT query completed after'
+        # self.assertRegex(_[0], __)
 
 
 if __name__ == '__main__':
