@@ -61,7 +61,7 @@ class TestDrive(TestCase):
         self.assertIn('attribute_name', colnames)
         self.assertIn('scope_catalog', colnames)
         _ = iostr.getvalue()
-        self.assertEqual(len(_.splitlines()), 3)
+        self.assertEqual(len(_.splitlines()), 5)
         _ = [i for i in _.splitlines() if 'DEBUG' in i and 'run_select' in i]
         r = 'withdb __init__.py:\\d+ DEBUG:\\d+ run_select: SELECT'
         self.assertRegex(_[0], r)
@@ -83,7 +83,7 @@ class TestDrive(TestCase):
         self.assertIn('attribute_name', colnames)
         self.assertIn('scope_catalog', colnames)
         _ = iostr.getvalue()
-        self.assertEqual(len(_.splitlines()), 1)
+        self.assertEqual(len(_.splitlines()), 2)
         _ = [i for i in _.splitlines() if 'INFO' in i and 'run_select' in i]
         __ = 'withdb __init__.py:\\d+ INFO:\\d+ run_select:\\s'
         __ += 'SELECT query completed after'
@@ -139,7 +139,6 @@ class TestDrive(TestCase):
         ]
         KEYS = ['entry_id', 'tz_at_insert', 'ts_without_tz', 'ts_with_tz']
         for i in lod:
-            # print(i)
             self.assertEqual(
                 i['ts_without_tz'], i['ts_with_tz'].astimezone(utc_tz))
 
@@ -170,14 +169,9 @@ class TestDrive(TestCase):
         with factory(self.cfg) as conn:
             conn("DROP TABLE IF EXISTS on_timezones")
 
-    @skip("WTF")
     def test_61_logging_at_load_lod(self):
-        logger = getLogger('withdb.psql')
+        logger = getLogger('withdb')
         logger.setLevel(getLevelName('DEBUG'))
-        # print('Propagate: ', logger.propagate)
-        # print('Parent logger effective level: ',
-        #       logger.parent.getEffectiveLevel())
-        # print('dir(): ', dir(logger))
         iostr = StringIO()
         sh = StreamHandler(iostr)
         sh.setLevel(getLevelName('DEBUG'))
@@ -187,19 +181,13 @@ class TestDrive(TestCase):
         self.test_60_load_lod()
 
         _ = iostr.getvalue()
-        self.assertEqual(len(_.splitlines()), 3)
-        print()
-        print(_)
+        _ = [i for i in _.splitlines() if 'bulkload' in i]
+        self.assertRegex(_[0], 'COPY\\s\\w+\\sFROM')
 
-    @skip("WTF")
     def test_70_logs_when_calling_nrow(self):
         """Check that the nrows() method logs messages"""
         logger = getLogger('withdb')
         logger.setLevel(getLevelName('DEBUG'))
-        # print('Propagate: ', logger.propagate)
-        # print('Parent logger effective level: ',
-        #       logger.parent.getEffectiveLevel())
-        # print('dir(): ', dir(logger))
         iostr = StringIO()
         sh = StreamHandler(iostr)
         sh.setLevel(getLevelName('DEBUG'))
@@ -208,17 +196,13 @@ class TestDrive(TestCase):
 
         with factory(self.cfg) as conn:
             n = conn.nrows("information_schema.attributes")
-        self.assertEqual(n, 0)
-
         _ = iostr.getvalue()
-        # print()
-        # print(_)
-        self.assertEqual(len(_.splitlines()), 1)
-        self.assertIn('withdb.base', _, 'Missing "withdb.base" logger')
-        # _ = [i for i in _.splitlines() if 'INFO' in i and 'run_select' in i]
-        # __ = 'withdb __init__.py:\\d+ INFO:\\d+ run_select:\\s'
-        # __ += 'SELECT query completed after'
-        # self.assertRegex(_[0], __)
+        self.assertIn('withdb.dbconn', _, 'Missing "withdb.base" logger')
+        _ = [i for i in _.splitlines() if 'INFO' in i and 'nrows' in i]
+        print(_)
+        self.assertEqual(len(_), 1)
+        __ = 'withdb.dbconn\\s\\w+.py:\\d+ INFO:\\d+ nrows: Row count:\\s'
+        self.assertRegex(_[0], __)
 
 
 if __name__ == '__main__':

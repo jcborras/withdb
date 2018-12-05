@@ -47,6 +47,7 @@ class TestDrive(TestCase):
 
     def test_bad_factory_params_1(self):
         """SQLite not supported just yet"""
+        getLogger('withdb').setLevel(getLevelName('CRITICAL'))
         bad_params = {'type': 'sqlite', 'params': None}
         self.assertRaises(RuntimeError, factory, bad_params)
 

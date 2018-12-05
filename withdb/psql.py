@@ -9,12 +9,12 @@ from re import sub
 from psycopg2 import connect as psyconnect
 from psycopg2 import ProgrammingError as psyProgrammingError
 
-from withdb.base import DbConnection
+from withdb.dbconn import DbConnection
 
-logger = getLogger(__name__)
-print(__name__, 'logger has parent logger: ', logger.parent)
-
-logger.setLevel(getLevelName('CRITICAL') + 100)
+# The logger name must abide to the module logger hierarchy hence
+# withdb -> withdb.dbconn -> withdb.dbconn.psql
+logger = getLogger(__name__.replace('.', '.dbconn.'))
+logger.setLevel(getLevelName('DEBUG'))
 
 
 class PostgreSQLconnection(DbConnection):

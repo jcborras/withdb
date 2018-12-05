@@ -11,7 +11,7 @@ from withdb.mysql import MySQLconnection
 from withdb.psql import PostgreSQLconnection
 
 logger = getLogger(__name__)
-logger.setLevel(getLevelName('CRITICAL') + 100)
+logger.setLevel(getLevelName('DEBUG'))
 
 
 def factory(params):

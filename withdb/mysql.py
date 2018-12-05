@@ -3,12 +3,18 @@
 
 from csv import DictWriter, QUOTE_NONNUMERIC, register_dialect
 from datetime import datetime
+from logging import getLogger, getLevelName
 from re import sub
 
 from mysql.connector import connect as mysql_connect
 from mysql.connector.errors import ProgrammingError as MySQLProgrammingError
 
-from withdb.base import DbConnection
+from withdb.dbconn import DbConnection
+
+# The logger name must abide to the module logger hierarchy hence
+# withdb -> withdb.dbconn -> withdb.dbconn.mysql
+logger = getLogger(__name__.replace('.', '.dbconn.'))
+logger.setLevel(getLevelName('DEBUG'))
 
 
 class MySQLconnection(DbConnection):
