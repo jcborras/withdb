@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; mode: python; -*-
 
+from datetime import datetime
+from logging import getLogger, getLevelName
+
+logger = getLogger(__name__)
+logger.setLevel(getLevelName('CRITICAL') + 100)
+
 
 class DbConnection(object):
     def __init__(self, connect_function, params):
@@ -18,6 +24,7 @@ class DbConnection(object):
         self.dbcon.close()
 
     def __call__(self, query):
+        logger.debug(query)
         self.cur.execute(query)
         colnames, tuples = None, None
         if self.cur.description:
@@ -28,10 +35,16 @@ class DbConnection(object):
     def nrows(self, tablename):
         qry = "SELECT COUNT(*) AS n FROM {t:s};".format(t=tablename)
         rows, cols = self.__call__(qry)
-        return rows[0][0]
+        n = rows[0][0]
+        logger.debug('Row count: {n:d}'.format(n=n))
+        return n
 
     def bulkload(self, tablename, filename):
-        raise RuntimeError('Please implement bulkload() on all descendents')
+        msg = 'Please implement bulkload() on all descendents'
+        logger.error(msg)
+        raise RuntimeError(msg)
 
     def bulkload_lod(self, lod, keys, tablename, tmp_prefix='/tmp/'):
-        raise RuntimeError('Please implement bulkload() on all descendents')
+        msg = 'Please implement bulkload_lod() on all descendents'
+        logger.error(msg)
+        raise RuntimeError(msg)
