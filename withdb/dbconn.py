@@ -5,7 +5,7 @@ from datetime import datetime
 from logging import getLogger, getLevelName
 
 logger = getLogger(__name__)
-logger.setLevel(getLevelName('DEBUG'))
+logger.setLevel(getLevelName('CRITICAL'))
 
 
 class DbConnection(object):

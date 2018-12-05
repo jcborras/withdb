@@ -14,7 +14,7 @@ from withdb.dbconn import DbConnection
 # The logger name must abide to the module logger hierarchy hence
 # withdb -> withdb.dbconn -> withdb.dbconn.psql
 logger = getLogger(__name__.replace('.', '.dbconn.'))
-logger.setLevel(getLevelName('DEBUG'))
+logger.setLevel(getLevelName('CRITICAL'))
 
 
 class PostgreSQLconnection(DbConnection):
