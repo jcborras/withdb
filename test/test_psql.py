@@ -62,9 +62,32 @@ class TestDrive(TestCase):
         self.assertIn('scope_catalog', colnames)
         _ = iostr.getvalue()
         self.assertEqual(len(_.splitlines()), 3)
-        l = [i for i in _.splitlines() if 'DEBUG' in i and 'run_select' in i]
-        self.assertRegex(l[0], 'withdb __init__.py:\\d+ DEBUG:\\d+ run_select: SELECT', _)
-        self.assertIn(qry, l[0])
+        _ = [i for i in _.splitlines() if 'DEBUG' in i and 'run_select' in i]
+        r = 'withdb __init__.py:\\d+ DEBUG:\\d+ run_select: SELECT'
+        self.assertRegex(_[0], r)
+        self.assertIn(qry, _[0])
+
+    def test_32_factory_psql_and_select_logs_info(self):
+        """Check that a SELECT query runs fine and logged as DEBUG"""
+        logger = getLogger('withdb')
+        logger.setLevel(getLevelName('DEBUG'))
+        iostr = StringIO()
+        sh = StreamHandler(iostr)
+        sh.setLevel(getLevelName('INFO'))
+        sh.setFormatter(Formatter(FMT))
+        logger.addHandler(sh)
+
+        qry = "SELECT * FROM information_schema.attributes;"
+        lod, colnames = run_select(self.cfg, qry)
+        self.assertEqual(len(lod), 0)
+        self.assertIn('attribute_name', colnames)
+        self.assertIn('scope_catalog', colnames)
+        _ = iostr.getvalue()
+        self.assertEqual(len(_.splitlines()), 1)
+        _ = [i for i in _.splitlines() if 'INFO' in i and 'run_select' in i]
+        __ = 'withdb __init__.py:\\d+ INFO:\\d+ run_select:\\s'
+        __ += 'SELECT query completed after'
+        self.assertRegex(_[0], __)
 
     def test_40_create_table(self):
         with factory(self.cfg) as conn:
