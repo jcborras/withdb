@@ -11,9 +11,8 @@ from psycopg2 import ProgrammingError as psyProgrammingError
 
 from withdb.dbconn import DbConnection
 
-# The logger name must abide to the module logger hierarchy hence
-# withdb -> withdb.dbconn -> withdb.dbconn.psql
-logger = getLogger(__name__.replace('.', '.dbconn.'))
+head, *tail = __name__.split('.')
+logger = getLogger(head)
 logger.setLevel(getLevelName('CRITICAL'))
 
 
@@ -25,7 +24,11 @@ class PostgreSQLconnection(DbConnection):
         try:
             return super().__call__(query)
         except psyProgrammingError as e:
-            # print(dir(e.diag)) # TODO: nice object for detailed error report
+            logger.error(e.pgerror)
+            _ = [i for i in dir(e.diag) if not i.startswith('__')]
+            _ = [(i, e.diag.__getattribute__(i)) for i in _]
+            for i in _:
+                logger.error('   ' + str(i[0]) + ': ' + str(i[1]))
             raise RuntimeError(e.pgerror)
         except BaseException as e:
             raise RuntimeError(e.args)

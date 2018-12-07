@@ -4,7 +4,8 @@
 from datetime import datetime
 from logging import getLogger, getLevelName
 
-logger = getLogger(__name__)
+head, *tail = __name__.split('.')
+logger = getLogger(head)
 logger.setLevel(getLevelName('CRITICAL'))
 
 

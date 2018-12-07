@@ -11,9 +11,8 @@ from mysql.connector.errors import ProgrammingError as MySQLProgrammingError
 
 from withdb.dbconn import DbConnection
 
-# The logger name must abide to the module logger hierarchy hence
-# withdb -> withdb.dbconn -> withdb.dbconn.mysql
-logger = getLogger(__name__.replace('.', '.dbconn.'))
+head, *tail = __name__.split('.')
+logger = getLogger(head)
 logger.setLevel(getLevelName('CRITICAL'))
 
 

@@ -7,22 +7,17 @@ from io import StringIO
 from logging import Formatter, StreamHandler, getLevelName, getLogger
 from unittest import TestCase, main, skip
 
+from sundry import logger_output_for
 from withdb import factory
 
 FMT = '%(asctime)s %(name)s %(filename)s:%(lineno)d '
-FMT += '%(levelname)s:%(levelno)s %(funcName)s: %(message)s'
+FMT += '%(levelname)s: %(funcName)s: %(message)s'
 
 
 class TestDrive(TestCase):
     def test_logging_errors(self):
         """ERROR logs are retrieved"""
-        logger = getLogger('withdb')
-        logger.setLevel(getLevelName('ERROR'))
-        iostr = StringIO()
-        sh = StreamHandler(iostr)
-        sh.setLevel(getLevelName('ERROR'))
-        sh.setFormatter(Formatter(FMT))
-        logger.addHandler(sh)
+        iostr = logger_output_for(logger_name='withdb', logging_level='ERROR')
         bad_params = {'type': 'sqlite', 'params': None}
         self.assertRaises(RuntimeError, factory, bad_params)
         _ = iostr.getvalue()
@@ -31,13 +26,7 @@ class TestDrive(TestCase):
 
     def test_logging_debug(self):
         """Up to DEBUG logs are retrieved"""
-        logger = getLogger('withdb')
-        logger.setLevel(getLevelName('DEBUG'))
-        iostr = StringIO()
-        sh = StreamHandler(iostr)
-        sh.setLevel(getLevelName('DEBUG'))
-        sh.setFormatter(Formatter(FMT))
-        logger.addHandler(sh)
+        iostr = logger_output_for(logger_name='withdb', logging_level='DEBUG')
         bad_params = {'type': 'sqlite', 'params': None}
         self.assertRaises(RuntimeError, factory, bad_params)
         _ = iostr.getvalue()
@@ -47,9 +36,11 @@ class TestDrive(TestCase):
 
     def test_bad_factory_params_1(self):
         """SQLite not supported just yet"""
-        getLogger('withdb').setLevel(getLevelName('CRITICAL'))
+        iostr = logger_output_for(logger_name='withdb', logging_level='ERROR')
         bad_params = {'type': 'sqlite', 'params': None}
         self.assertRaises(RuntimeError, factory, bad_params)
+        _ = [i for i in iostr.getvalue().splitlines() if 'ERROR' in i]
+        self.assertRegex(_[0], 'factory: Bad connection type')
 
 
 if __name__ == '__main__':

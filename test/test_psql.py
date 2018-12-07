@@ -17,6 +17,19 @@ FMT = '%(asctime)s %(name)s %(filename)s:%(lineno)d '
 FMT += '%(levelname)s:%(levelno)s %(funcName)s: %(message)s'
 
 
+def logger_output_for(logger_name, logging_level):
+    """Returns a StringIO that holds what logger_name will log for a given
+    logging level"""
+    logger = getLogger(logger_name)
+    logger.setLevel(getLevelName(logging_level))
+    iostr = StringIO()
+    sh = StreamHandler(iostr)
+    sh.setLevel(getLevelName(logging_level))
+    sh.setFormatter(Formatter(FMT))
+    logger.addHandler(sh)
+    return iostr
+
+
 class TestDrive(TestCase):
     CFG_FILE = expanduser('~/.withdb_test_psql.cfg')
 
@@ -47,13 +60,7 @@ class TestDrive(TestCase):
 
     def test_31_factory_psql_and_select_is_logged(self):
         """Check that a SELECT query runs fine and logged as DEBUG"""
-        logger = getLogger('withdb')
-        logger.setLevel(getLevelName('DEBUG'))
-        iostr = StringIO()
-        sh = StreamHandler(iostr)
-        sh.setLevel(getLevelName('DEBUG'))
-        sh.setFormatter(Formatter(FMT))
-        logger.addHandler(sh)
+        iostr = logger_output_for(logger_name='withdb', logging_level='DEBUG')
 
         qry = "SELECT * FROM information_schema.attributes;"
         lod, colnames = run_select(self.cfg, qry)
@@ -61,7 +68,6 @@ class TestDrive(TestCase):
         self.assertIn('attribute_name', colnames)
         self.assertIn('scope_catalog', colnames)
         _ = iostr.getvalue()
-        self.assertEqual(len(_.splitlines()), 3)
         _ = [i for i in _.splitlines() if 'DEBUG' in i and 'run_select' in i]
         r = 'withdb __init__.py:\\d+ DEBUG:\\d+ run_select: SELECT'
         self.assertRegex(_[0], r)
@@ -69,13 +75,7 @@ class TestDrive(TestCase):
 
     def test_32_factory_psql_and_select_logs_info(self):
         """Check that a SELECT query runs fine and logged as DEBUG"""
-        logger = getLogger('withdb')
-        logger.setLevel(getLevelName('DEBUG'))
-        iostr = StringIO()
-        sh = StreamHandler(iostr)
-        sh.setLevel(getLevelName('INFO'))
-        sh.setFormatter(Formatter(FMT))
-        logger.addHandler(sh)
+        iostr = logger_output_for(logger_name='withdb', logging_level='INFO')
 
         qry = "SELECT * FROM information_schema.attributes;"
         lod, colnames = run_select(self.cfg, qry)
@@ -83,7 +83,6 @@ class TestDrive(TestCase):
         self.assertIn('attribute_name', colnames)
         self.assertIn('scope_catalog', colnames)
         _ = iostr.getvalue()
-        self.assertEqual(len(_.splitlines()), 1)
         _ = [i for i in _.splitlines() if 'INFO' in i and 'run_select' in i]
         __ = 'withdb __init__.py:\\d+ INFO:\\d+ run_select:\\s'
         __ += 'SELECT query completed after'
@@ -170,44 +169,38 @@ class TestDrive(TestCase):
             conn("DROP TABLE IF EXISTS on_timezones")
 
     def test_61_logging_at_load_lod(self):
-        logger = getLogger('withdb.dbconn.psql')
-        logger.setLevel(getLevelName('DEBUG'))
-        logger = getLogger('withdb.dbconn')
-        logger.setLevel(getLevelName('DEBUG'))
-        logger = getLogger('withdb')
-        logger.setLevel(getLevelName('DEBUG'))
-        iostr = StringIO()
-        sh = StreamHandler(iostr)
-        sh.setLevel(getLevelName('DEBUG'))
-        sh.setFormatter(Formatter(FMT))
-        logger.addHandler(sh)
+        iostr = logger_output_for(logger_name='withdb', logging_level='DEBUG')
 
         self.test_60_load_lod()
 
         _ = iostr.getvalue()
-        _ = [i for i in _.splitlines() if 'withdb.dbconn.psql' in i]
+        _ = [i for i in _.splitlines() if 'withdb' in i and 'bulkload' in i]
         self.assertRegex(_[0], 'COPY\\s\\w+\\sFROM')
 
     def test_70_logs_when_calling_nrow(self):
         """Check that the nrows() method logs messages"""
-        logger = getLogger('withdb.dbconn')
-        logger.setLevel(getLevelName('DEBUG'))
-        logger = getLogger('withdb')
-        logger.setLevel(getLevelName('DEBUG'))
-        iostr = StringIO()
-        sh = StreamHandler(iostr)
-        sh.setLevel(getLevelName('DEBUG'))
-        sh.setFormatter(Formatter(FMT))
-        logger.addHandler(sh)
+        iostr = logger_output_for(logger_name='withdb', logging_level='DEBUG')
 
         with factory(self.cfg) as conn:
             n = conn.nrows("information_schema.attributes")
         _ = iostr.getvalue()
-        self.assertIn('withdb.dbconn', _, 'Missing "withdb.base" logger')
+        self.assertIn('withdb', _, 'Missing "withdb.base" logger')
         _ = [i for i in _.splitlines() if 'INFO' in i and 'nrows' in i]
         self.assertEqual(len(_), 1)
-        __ = 'withdb.dbconn\\s\\w+.py:\\d+ INFO:\\d+ nrows: Row count:\\s'
+        __ = 'withdb\\s\\w+.py:\\d+ INFO:\\d+ nrows: Row count:\\s'
         self.assertRegex(_[0], __)
+
+    def test_80_bad_sql(self):
+        "Nicer report when bad SQL is used"
+        iostr = logger_output_for(logger_name='withdb', logging_level='DEBUG')
+
+        with factory(self.cfg) as conn:
+            self.assertRaises(RuntimeError, conn, 'ASELECT * FROM foobar')
+
+        _ = iostr.getvalue()
+        _ = [i for i in _.splitlines() if 'ERROR' in i]
+        self.assertTrue(len([i for i in _ if 'message_primary' in i]) > 0)
+        self.assertTrue(len([i for i in _ if 'sqlstate' in i]) > 0)
 
 
 if __name__ == '__main__':
