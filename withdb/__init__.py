@@ -2,7 +2,7 @@
 # -*- coding: utf-8; mode: python; -*-
 
 __author__ = 'Juan Carlos Borrás'
-__version__ = '0.0.4'
+__version__ = '0.1.0'
 
 from datetime import datetime
 from logging import getLogger, getLevelName
@@ -10,7 +10,8 @@ from logging import getLogger, getLevelName
 from withdb.mysql import MySQLconnection
 from withdb.psql import PostgreSQLconnection
 
-logger = getLogger(__name__)
+head, *tail = __name__.split('.')
+logger = getLogger(head)
 logger.setLevel(getLevelName('CRITICAL'))
 
 
